@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import { Textarea } from "../ui/textarea";
 import { isBase64Image } from "@/lib/utils";
+import { useUploadThing } from "../../lib/uploadThing";
 
 interface Props {
   user: {
@@ -32,6 +33,7 @@ interface Props {
 
 const AccountProfile: React.FC<Props> = ({ user, btnTitle }) => {
   const [files, setFiles] = useState<File[]>([]);
+  const { startUpload } = useUploadThing("media");
 
   const form = useForm<z.infer<typeof userValidation>>({
     resolver: zodResolver(userValidation),
@@ -57,22 +59,28 @@ const AccountProfile: React.FC<Props> = ({ user, btnTitle }) => {
       setFiles(Array.from(e.target.files));
 
       fileReader.onload = async (e) => {
-        const imageDataURL = e.target?.result?.toString() || '';
-        fieldChange(imageDataURL)
-      }
+        const imageDataURL = e.target?.result?.toString() || "";
+        fieldChange(imageDataURL);
+      };
 
-      fileReader.readAsDataURL(file)
+      fileReader.readAsDataURL(file);
     }
   };
 
-  const onSubmit = (values: z.infer<typeof userValidation>) => {
-    const blob = values.profile_photo
+  const onSubmit = async (values: z.infer<typeof userValidation>) => {
+    const blob = values.profile_photo;
 
     const hasImageChanged = isBase64Image(blob);
 
-if(hasImageChanged) {
-    
-}
+    if (hasImageChanged) {
+      const imgRes = await startUpload(files);
+
+      if (imgRes && imgRes[0].url) {
+        values.profile_photo = imgRes[0].url;
+      }
+    }
+
+    /* TODO: update user profile */
   };
 
   return (
