@@ -1,19 +1,30 @@
 import AccountProfile from "@/components/forms/AccountProfile";
+import { fetchUser } from "@/lib/actions/users.action";
 import { currentUser } from "@clerk/nextjs";
 
-async function Page() {
+async function fetchUserData() {
   const user = await currentUser();
+  let userInfo;
 
-  const userInfo = {};
+  if (user) {
+    userInfo = await fetchUser(user?.id);
+  }
 
-  const userData = {
+  const userData: User = {
     id: user?.id,
     objectId: userInfo?._id,
     username: userInfo?.username || user?.username,
     name: userInfo?.name || user?.firstName || "",
     bio: userInfo?.bio,
     image: userInfo?.image || user?.imageUrl,
+    onboarded: userInfo?.onboarded || false,
   };
+
+  return userData;
+}
+
+export default async function Page() {
+  const userData = await fetchUserData();
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col justify-start px-10 py-20">
@@ -28,5 +39,3 @@ async function Page() {
     </main>
   );
 }
-
-export default Page;

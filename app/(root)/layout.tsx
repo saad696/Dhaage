@@ -7,6 +7,7 @@ import TopBar from "@/components/shared/TopBar";
 import LeftBar from "@/components/shared/LeftBar";
 import RightBar from "@/components/shared/RightBar";
 import BottomBar from "@/components/shared/BottomBar";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,6 +39,7 @@ export default function RootLayout({
             <RightBar />
           </main>
           <BottomBar />
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>

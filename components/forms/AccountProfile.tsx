@@ -1,7 +1,7 @@
 "use client";
 
 import * as z from "zod";
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userValidation } from "@/lib/validations/user.validation";
@@ -12,28 +12,26 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import { Textarea } from "../ui/textarea";
 import { isBase64Image } from "@/lib/utils";
 import { useUploadThing } from "../../lib/uploadThing";
+import { updateUser } from "@/lib/actions/users.action";
+import { usePathname, useRouter } from "next/navigation";
 
 interface Props {
-  user: {
-    id: any;
-    objectId: any;
-    username: any;
-    name: any;
-    bio: any;
-    image: any;
-  };
+  user: User;
   btnTitle: string;
 }
 
 const AccountProfile: React.FC<Props> = ({ user, btnTitle }) => {
   const [files, setFiles] = useState<File[]>([]);
   const { startUpload } = useUploadThing("media");
+  const router = useRouter();
+  const pathname = usePathname();
 
   const form = useForm<z.infer<typeof userValidation>>({
     resolver: zodResolver(userValidation),
@@ -80,8 +78,27 @@ const AccountProfile: React.FC<Props> = ({ user, btnTitle }) => {
       }
     }
 
-    /* TODO: update user profile */
+    await updateUser({
+      username: values.username,
+      name: values.name,
+      bio: values.bio,
+      image: values.profile_photo,
+      userId: user.id as string,
+      path: pathname,
+    });
+
+    if (pathname === "/profile/edit") {
+      router.back();
+    } else {
+      router.push("/");
+    }
   };
+
+  useEffect(() => {
+    if (user.onboarded) {
+      router.push("/");
+    }
+  }, []);
 
   return (
     <>
@@ -125,6 +142,7 @@ const AccountProfile: React.FC<Props> = ({ user, btnTitle }) => {
                     onChange={(e) => handleImage(e, field.onChange)}
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -144,6 +162,7 @@ const AccountProfile: React.FC<Props> = ({ user, btnTitle }) => {
                     {...field}
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -163,6 +182,7 @@ const AccountProfile: React.FC<Props> = ({ user, btnTitle }) => {
                     {...field}
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -182,6 +202,7 @@ const AccountProfile: React.FC<Props> = ({ user, btnTitle }) => {
                     {...field}
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />

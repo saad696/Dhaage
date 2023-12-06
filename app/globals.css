@@ -159,3 +159,31 @@
 .comment-form_btn {
   @apply rounded-3xl bg-primary-500 px-8 py-2 !text-small-regular text-light-1 max-xs:w-full !important;
 }
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Hide the scrollbar thumb (the draggable part) */
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* Hide the scrollbar track on hover */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Hide the scrollbar corner */
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+html {
+  /* Hide the main scrollbar */
+  scrollbar-width: none;
+
+  /* Optionally, hide the scrollbar on the track on hover */
+  scrollbar-width: thin;
+}
