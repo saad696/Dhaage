@@ -24,7 +24,8 @@ export interface IUser {
   name: string;
   image: string;
   bio?: string;
-  threads: mongoose.Schema.Types.ObjectId[];
+  totalLikes: number;
+  threads: IThread[];
   likes: mongoose.Schema.Types.ObjectId[];
   onboarded: boolean;
   communities: mongoose.Schema.Types.ObjectId[];
@@ -37,7 +38,8 @@ export interface IThread {
   community?: mongoose.Schema.Types.ObjectId;
   createdAt?: Date;
   parentId?: string;
-  children?: IThread[];
+  children: IThread[];
   likes: mongoose.Schema.Types.ObjectId[];
-  hasLiked: boolean
+  hasLiked: boolean;
+  isComment: boolean;
 }

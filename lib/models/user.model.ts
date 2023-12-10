@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   image: String,
   bio: String,
+  totalLikes: { type: Number, default: 0 },
   threads: [
     {
       type: mongoose.Schema.Types.ObjectId,

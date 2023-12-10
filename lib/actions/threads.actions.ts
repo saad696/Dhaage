@@ -7,7 +7,7 @@ import User from "../models/user.model";
 import { connectToDB } from "../mongoose";
 import mongoose from "mongoose";
 import { LRUCache } from "lru-cache";
-import { cacheKeyLikedBy, cacheKeyPosts, cacheOptions } from "@/constants";
+import { cacheKeyPosts, cacheOptions } from "@/constants";
 
 // Create a new cache
 const cache = new LRUCache<string, { posts: IThread[]; isNext: boolean }>(
@@ -37,7 +37,7 @@ export async function createThread({
     cache.delete(cacheKeyPosts);
     revalidatePath(path);
   } catch (error: any) {
-    throw new Error(`Failed to create thread: ${error.message}`);
+    throw new Error(`Failed to create dhaaga: ${error.message}`);
   }
 }
 
@@ -80,14 +80,7 @@ export async function fetchPosts(
         // Fetch the user
         const user = (await User.findOne({ id: userId })) as IUser;
         if (user) {
-          // Convert the user's likes array into a Set
-          const likesSet = new Set(user.likes.map(String));
-          // Map through the posts and add a 'hasLiked' property
-          posts = posts.map((post) => ({
-            // @ts-ignore
-            ...post._doc,
-            hasLiked: likesSet.has(String(post._id)),
-          }));
+          posts = await populateHasLiked(posts, userId, true);
         }
       }
       cache.set(cacheKeyPosts, { posts: posts, isNext: isNext });
@@ -96,7 +89,7 @@ export async function fetchPosts(
       return { posts: data?.posts as IThread[], isNext: data?.isNext };
     }
   } catch (error: any) {
-    throw new Error(`Failed to create thread: ${error.message}`);
+    throw new Error(`Failed to fetch dhaage: ${error.message}`);
   }
 }
 
@@ -106,46 +99,179 @@ export async function likeUnlikeThread(
   isLike: boolean = false,
   path: string
 ) {
-  connectToDB();
-  // Find the user and the thread
-  const user = await User.findOne({ id: userId });
-  const thread = await Thread.findById(threadId);
+  try {
+    connectToDB();
+    // Find the user and the thread
+    const user = await User.findOne({ id: userId });
+    const thread = await Thread.findById(threadId);
 
-  if (!user || !thread) {
-    throw new Error("User or thread not found");
+    const threadOwner = await User.findOne({ _id: thread.author });
+
+    if (!user || !thread) {
+      throw new Error("User or thread not found");
+    }
+
+    if (isLike) {
+      // Add the user's ID to the thread's likes and vice versa
+      thread.likes.push(user._id);
+      user.likes.push(thread._id);
+      threadOwner.totalLikes += 1;
+    } else {
+      thread.likes = thread.likes.filter((id: any) => !id.equals(user._id));
+      user.likes = user.likes.filter((id: any) => !id.equals(thread._id));
+      threadOwner.totalLikes -= 1;
+    }
+
+    // Save the changes
+    await thread.save();
+    await user.save();
+    await threadOwner.save();
+
+    cache.delete(cacheKeyPosts);
+    revalidatePath(path);
+  } catch (error: any) {
+    throw new Error(`Process failed: ${error.message}`);
   }
-
-  if (isLike) {
-    // Add the user's ID to the thread's likes and vice versa
-    thread.likes.push(user._id);
-    user.likes.push(thread._id);
-  } else {
-    thread.likes = thread.likes.filter((id: any) => !id.equals(user._id));
-    user.likes = user.likes.filter((id: any) => !id.equals(thread._id));
-  }
-
-  // Save the changes
-  await thread.save();
-  await user.save();
-
-  cache.delete(cacheKeyPosts);
-  revalidatePath(path);
 }
 
 export async function likedBy(threadId: string): Promise<any> {
-  const likedByQuery = Thread.findById(threadId)
-    .populate({
-      path: "likes",
-      model: "User",
-      select: "username image",
-    })
-    .lean();
+  try {
+    const likedByQuery = Thread.findById(threadId)
+      .populate({
+        path: "likes",
+        model: "User",
+        select: "username image",
+      })
+      .lean();
 
-  const data = (await likedByQuery.exec()) as IThread;
+    const data = (await likedByQuery.exec()) as IThread;
 
-  if (!data) {
-    throw new Error("Thread not found");
+    if (!data) {
+      throw new Error("Thread not found");
+    }
+
+    return JSON.stringify(data.likes);
+  } catch (error: any) {
+    throw new Error(
+      `Process failed to get the liked by list: ${error.message}`
+    );
+  }
+}
+
+export async function fetchThreadById(
+  id: string,
+  userId: string | undefined
+): Promise<IThread> {
+  connectToDB();
+
+  try {
+    let thread = await Thread.findById(id)
+      .populate({
+        path: "author",
+        model: "User",
+        select: "_id id name image",
+      })
+      .populate({
+        path: "children",
+        populate: [
+          {
+            path: "author",
+            model: "User",
+            select: "_id id name parentId image",
+          },
+          {
+            path: "children",
+            model: "Thread",
+            populate: {
+              path: "author",
+              model: "User",
+              select: "_id id name parentId image",
+            },
+          },
+        ],
+      })
+      .exec();
+
+    if (userId) {
+      thread = await populateHasLiked(thread, userId);
+    }
+
+    return thread;
+  } catch (error: any) {
+    throw new Error(
+      `Failed to fetch the dhaaga by id '${id}': ${error.message}`
+    );
+  }
+}
+
+export async function addComment(
+  threadId: string,
+  userId: string,
+  commentText: string,
+  path: string
+) {
+  connectToDB();
+
+  try {
+    const orignalThread = await Thread.findById(threadId);
+
+    if (!orignalThread) {
+      throw new Error("Dhaaga not found");
+    }
+
+    const commentThread = new Thread({
+      text: commentText,
+      author: userId,
+      parentId: threadId,
+      isComment: true,
+    });
+
+    const saveCommentThread: IThread = await commentThread.save();
+
+    orignalThread.children.push(saveCommentThread._id);
+    await User.findByIdAndUpdate(new mongoose.Types.ObjectId(userId), {
+      $push: { threads: saveCommentThread._id },
+    });
+
+    await orignalThread.save();
+
+    revalidatePath(path);
+  } catch (error: any) {
+    throw new Error(`Error adding comment: ${error.message}`);
+  }
+}
+
+/* helper */
+async function populateHasLiked(
+  thread: any,
+  userId: string,
+  mainFetch = false
+) {
+  const user = await User.findOne({ id: userId });
+  const likesSet = new Set(user.likes.map(String));
+
+  if (mainFetch) {
+    thread = thread.map((post: IThread) => ({
+      // @ts-ignore
+      ...post._doc,
+      hasLiked: likesSet.has(String(post._id)),
+    }));
+  } else {
+    // Add 'hasLiked' property to the thread
+    thread = {
+      ...thread._doc,
+      hasLiked: likesSet.has(String(thread._id)),
+    };
   }
 
-  return JSON.stringify(data.likes);
+  if (!mainFetch) {
+    // If the thread has children, recursively add 'hasLiked' to them
+    if (thread.children && thread.children.length > 0) {
+      thread.children = await Promise.all(
+        thread.children.map((child: IThread) => populateHasLiked(child, userId))
+      );
+    }
+  }
+
+  return thread;
 }

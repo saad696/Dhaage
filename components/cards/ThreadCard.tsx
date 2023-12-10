@@ -11,14 +11,15 @@ interface ThreadCardProps {
   currentUserId: string | null;
   _id: mongoose.Schema.Types.ObjectId;
   text: string;
-  author: IUser;
+  author: Partial<IUser>;
   hasLiked: boolean;
   likesCount: number;
-  children?: IThread[];
+  comments?: IThread[];
   parentId?: string;
   createdAt?: Date;
   community?: any;
   isComment?: boolean;
+  profile?: boolean;
 }
 
 const ThreadCard: React.FC<ThreadCardProps> = ({
@@ -30,24 +31,34 @@ const ThreadCard: React.FC<ThreadCardProps> = ({
   community,
   createdAt,
   parentId,
-  children,
-  isComment,
+  comments,
   hasLiked,
   likesCount,
+  isComment = false,
+  profile = false,
 }) => {
   return (
-    <article className="flex w-full flex-col rounded-xl bg-dark-2 p-7">
+    <article
+      className={`flex w-full flex-col rounded-xl ${
+        !profile && isComment ? "px-0 xs:px-7" : "bg-dark-2 p-7"
+      }`}
+    >
       <div className="flex items-start justify-between">
         <div className="flex w-full flex-1 flex-row gap-4">
           <div className="flex flex-col items-center">
-            <Link href={`/profile/${author.id}`} className="relative h-11 w-11">
-              <Image
-                src={author.image}
-                alt="profile-image"
-                fill
-                className="cursor-pointer rounded-fill"
-              />
-            </Link>
+            {author.image && (
+              <Link
+                href={`/profile/${author.id}`}
+                className="relative h-11 w-11"
+              >
+                <Image
+                  src={author.image}
+                  alt="profile-image"
+                  fill
+                  className="cursor-pointer rounded-full"
+                />
+              </Link>
+            )}
 
             <div className="thread-card_bar" />
           </div>
@@ -59,13 +70,24 @@ const ThreadCard: React.FC<ThreadCardProps> = ({
               </h4>
             </Link>
             <p className="mt-2 text-small-regular text-light-2">{text}</p>
-            <div className="mt-5 flex flex-col gap-3">
+            <div
+              className={`${
+                !profile && isComment && "mb-10 "
+              } mt-5 flex flex-col gap-3`}
+            >
               <Actions
                 userId={currentUserId?.toString()}
                 threadId={_id.toString()}
                 hasLiked={hasLiked}
                 likesCount={likesCount}
+                profile={profile}
+                isCommnet={isComment}
               />
+              {!profile && isComment && comments && comments.length && (
+                <Link href={`/dhaaga/${_id.toString()}`}>
+                  <p className="mt-1 text-subtle-medium text-gray-1">Replies</p>
+                </Link>
+              )}
             </div>
           </div>
         </div>

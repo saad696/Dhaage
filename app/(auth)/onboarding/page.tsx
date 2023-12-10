@@ -1,6 +1,7 @@
 import AccountProfile from "@/components/forms/AccountProfile";
 import { fetchUser } from "@/lib/actions/users.action";
 import { currentUser } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
 async function fetchUserData() {
   const user = await currentUser();
@@ -25,6 +26,10 @@ async function fetchUserData() {
 
 export default async function Page() {
   const userData = await fetchUserData();
+
+  if (userData.onboarded) {
+    redirect("/");
+  }
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col justify-start px-10 py-20">

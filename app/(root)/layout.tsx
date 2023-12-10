@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: "Dhaage",
   description: "Dhaage | Share your thoughts.",
   icons: {
-    icon: "favicon.ico",
+    icon: "/favicon.ico",
   },
 };
 

@@ -6,7 +6,6 @@ export default async function Home() {
   const user = await currentUser();
   const data = await fetchPosts(1, 30, user?.id);
 
-
   return (
     <>
       <h1 className="head-text text-left">Home</h1>
@@ -16,8 +15,6 @@ export default async function Home() {
           <p className="no-result">No Dhaage found</p>
         ) : (
           data.posts.map((post) => {
-            console.log(post);
-            
             return (
               <ThreadCard
                 key={post._id.toString()}
@@ -26,7 +23,7 @@ export default async function Home() {
                 text={post.text}
                 _id={post._id}
                 author={post.author}
-                children={post.children}
+                comments={post.children}
                 parentId={post.parentId}
                 createdAt={post.createdAt}
                 community={post.community}

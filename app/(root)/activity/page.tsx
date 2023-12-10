@@ -1,4 +1,3 @@
-import PostThread from "@/components/forms/PostThread";
 import { fetchUser } from "@/lib/actions/users.action";
 import { currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
@@ -15,12 +14,9 @@ async function Page() {
   }
 
   return (
-    <>
-      <h1 className="head-text">Create Dhaaga</h1>
-      {
-        userInfo && <PostThread userId={userInfo._id.toString()} />
-      }
-    </>
+    <section>
+      <h1 className="head-text mb-10">Activity</h1>
+    </section>
   );
 }
 

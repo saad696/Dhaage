@@ -1,7 +1,7 @@
 "use client";
 
 import * as z from "zod";
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userValidation } from "@/lib/validations/user.validation";
@@ -93,12 +93,6 @@ const AccountProfile: React.FC<Props> = ({ user, btnTitle }) => {
       router.push("/");
     }
   };
-
-  useEffect(() => {
-    if (user.onboarded) {
-      router.push("/");
-    }
-  }, []);
 
   return (
     <>
