@@ -1,3 +1,5 @@
+import { IUser } from "@/lib/interface/interface";
+
 type User = {
   id: string | undefined;
   objectId: any;
@@ -7,3 +9,5 @@ type User = {
   image: string | undefined;
   onboarded: boolean
 };
+
+// type OmittedIUser = Omit<IUser, "_id" | "likes">;

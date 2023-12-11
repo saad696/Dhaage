@@ -1,8 +1,6 @@
 import { fetchUserPosts } from "@/lib/actions/users.action";
-import { redirect } from "next/navigation";
 import React from "react";
 import ThreadCard from "../cards/ThreadCard";
-import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { CornerUpRight, FileText } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
@@ -22,9 +20,13 @@ const ThreadsTab: React.FC<Props> = async ({
 }) => {
   let data = await fetchUserPosts(accountId);
 
-  if (!data) {
-    // redirect("/");
-  }
+  const primaryThreads = data.threads.filter(
+    (thread) => thread.isComment !== true
+  );
+
+  const commentThreads = data.threads.filter(
+    (thread) => thread.isComment === true
+  );
 
   return (
     <>
@@ -47,10 +49,20 @@ const ThreadsTab: React.FC<Props> = async ({
             <TabsTrigger key={"primary"} value={"primary"} className="tab">
               <FileText />
               <p className="max-sm:hidden">Primary</p>
+              <p className="ml-1 rounded-sm bg-light-4 px-2 py-1 !text-tiny-medium text-light-2">
+                {primaryThreads && primaryThreads.length
+                  ? primaryThreads.length
+                  : 0}
+              </p>
             </TabsTrigger>
             <TabsTrigger key={"comment"} value={"comment"} className="tab">
               <CornerUpRight />
               <p className="max-sm:hidden">Replies</p>
+              <p className="ml-1 rounded-sm bg-light-4 px-2 py-1 !text-tiny-medium text-light-2">
+                {commentThreads && commentThreads.length
+                  ? commentThreads.length
+                  : 0}
+              </p>
             </TabsTrigger>
           </TabsList>
           <div className="flex flex-col h-screen mt-10">
@@ -60,38 +72,36 @@ const ThreadsTab: React.FC<Props> = async ({
                 value={"primary"}
                 className="w-full text-light-1 space-y-6"
               >
-                {data.threads && data.threads.length ? (
-                  data.threads
-                    .filter((thread) => thread.isComment !== true)
-                    .map((thread: any) => (
-                      <ThreadCard
-                        key={thread._id.toString()}
-                        id={thread._id.toString()}
-                        currentUserId={currentUserId}
-                        text={thread.text}
-                        _id={thread._id}
-                        author={
-                          accountType === "User"
-                            ? {
-                                name: data.name,
-                                image: data.image,
-                                id: data.id,
-                              }
-                            : {
-                                name: thread.author.name,
-                                image: thread.author.image,
-                                id: thread.author.id,
-                              }
-                        }
-                        comments={thread.children}
-                        parentId={thread.parentId}
-                        createdAt={thread.createdAt}
-                        community={thread.community}
-                        hasLiked={thread.hasLiked}
-                        likesCount={thread.likes.length}
-                        profile={true}
-                      />
-                    ))
+                {primaryThreads && primaryThreads.length ? (
+                  primaryThreads.map((thread: any) => (
+                    <ThreadCard
+                      key={thread._id.toString()}
+                      id={thread._id.toString()}
+                      currentUserId={currentUserId}
+                      text={thread.text}
+                      _id={thread._id}
+                      author={
+                        accountType === "User"
+                          ? {
+                              name: data.name,
+                              image: data.image,
+                              id: data.id,
+                            }
+                          : {
+                              name: thread.author.name,
+                              image: thread.author.image,
+                              id: thread.author.id,
+                            }
+                      }
+                      comments={thread.children}
+                      parentId={thread.parentId}
+                      createdAt={thread.createdAt}
+                      community={thread.community}
+                      hasLiked={thread.hasLiked}
+                      likesCount={thread.likes.length}
+                      profile={true}
+                    />
+                  ))
                 ) : (
                   <p className="no-result">Nothing posted yet!</p>
                 )}
@@ -101,38 +111,37 @@ const ThreadsTab: React.FC<Props> = async ({
                 value={"comment"}
                 className="w-full text-light-1 space-y-6"
               >
-                {data.threads && data.threads.length ? (
-                  data.threads
-                    .filter((thread) => thread.isComment === true)
-                    .map((thread: any) => (
-                      <ThreadCard
-                        key={thread._id.toString()}
-                        id={thread._id.toString()}
-                        currentUserId={currentUserId}
-                        text={thread.text}
-                        _id={thread._id}
-                        author={
-                          accountType === "User"
-                            ? {
-                                name: data.name,
-                                image: data.image,
-                                id: data.id,
-                              }
-                            : {
-                                name: thread.author.name,
-                                image: thread.author.image,
-                                id: thread.author.id,
-                              }
-                        }
-                        comments={thread.children}
-                        parentId={thread.parentId}
-                        createdAt={thread.createdAt}
-                        community={thread.community}
-                        hasLiked={thread.hasLiked}
-                        likesCount={thread.likes.length}
-                        profile={true}
-                      />
-                    ))
+                {commentThreads && commentThreads.length ? (
+                  commentThreads.map((thread: any) => (
+                    <ThreadCard
+                      key={thread._id.toString()}
+                      id={thread._id.toString()}
+                      currentUserId={currentUserId}
+                      text={thread.text}
+                      _id={thread._id}
+                      author={
+                        accountType === "User"
+                          ? {
+                              name: data.name,
+                              image: data.image,
+                              id: data.id,
+                            }
+                          : {
+                              name: thread.author.name,
+                              image: thread.author.image,
+                              id: thread.author.id,
+                            }
+                      }
+                      comments={thread.children}
+                      parentId={thread.parentId}
+                      createdAt={thread.createdAt}
+                      community={thread.community}
+                      hasLiked={thread.hasLiked}
+                      likesCount={thread.likes.length}
+                      profile={true}
+                      isComment={true}
+                    />
+                  ))
                 ) : (
                   <p className="no-result">Nothing posted yet!</p>
                 )}

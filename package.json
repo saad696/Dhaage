@@ -36,6 +36,7 @@
     "lru-cache": "^10.1.0",
     "lucide-react": "^0.260.0",
     "micro": "^10.0.1",
+    "moment": "^2.29.4",
     "mongoose": "^7.3.4",
     "next": "13.4.10",
     "postcss": "8.4.26",

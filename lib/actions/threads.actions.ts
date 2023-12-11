@@ -1,13 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { CreateThreadParams, IThread, IUser } from "../interface/interface";
+import {
+  ActivityResponse,
+  CreateThreadParams,
+  IThread,
+  IUser,
+} from "../interface/interface";
 import Thread from "../models/thread.model";
 import User from "../models/user.model";
 import { connectToDB } from "../mongoose";
 import mongoose from "mongoose";
 import { LRUCache } from "lru-cache";
 import { cacheKeyPosts, cacheOptions } from "@/constants";
+import Activity from "../models/activity.model";
 
 // Create a new cache
 const cache = new LRUCache<string, { posts: IThread[]; isNext: boolean }>(
@@ -116,10 +122,24 @@ export async function likeUnlikeThread(
       thread.likes.push(user._id);
       user.likes.push(thread._id);
       threadOwner.totalLikes += 1;
+
+      let activity = new Activity({
+        from: user._id,
+        to: threadOwner._id,
+        actionThread: thread._id,
+        type: "like",
+      });
+
+      await activity.save();
     } else {
       thread.likes = thread.likes.filter((id: any) => !id.equals(user._id));
       user.likes = user.likes.filter((id: any) => !id.equals(thread._id));
       threadOwner.totalLikes -= 1;
+
+      await Activity.findOneAndUpdate({
+        to: threadOwner._id,
+        status: "delete",
+      });
     }
 
     // Save the changes
@@ -235,6 +255,16 @@ export async function addComment(
 
     await orignalThread.save();
 
+    /* add to activity */
+    const activity = new Activity({
+      from: userId,
+      to: orignalThread.author._id,
+      actionThread: orignalThread._id,
+      type: "comment",
+    });
+
+    await activity.save();
+
     revalidatePath(path);
   } catch (error: any) {
     throw new Error(`Error adding comment: ${error.message}`);
@@ -275,3 +305,36 @@ async function populateHasLiked(
 
   return thread;
 }
+
+// export async function getActivity(userId: string): Promise<ActivityResponse> {
+//   connectToDB();
+
+//   try {
+//     const userThreads = await Thread.find({ author: userId });
+
+//     const childThreadIds = userThreads.reduce((acc, userThread: IThread) => {
+//       return acc.concat(userThread.children);
+//     }, []);
+
+//     const replies = (await Thread.find({
+//       _id: { $in: childThreadIds },
+//       author: { $ne: userId },
+//     }).populate({
+//       path: "author",
+//       model: "User",
+//       select: "name username image _id",
+//     })) as IThread[];
+
+//     const likesIds = userThreads.reduce((acc, userThread: IThread) => {
+//       return acc.concat(userThread.likes);
+//     }, []);
+
+//     const likes = await User.find({
+//       _id: { $in: likesIds, $ne: userId },
+//     }).select("name username image _id");
+
+//     return [...replies, ...likes];
+//   } catch (error) {
+//     throw new Error("Failed to fetch activity");
+//   }
+// }

@@ -43,3 +43,15 @@ export interface IThread {
   hasLiked: boolean;
   isComment: boolean;
 }
+
+export interface IActivity {
+  _id: mongoose.Schema.Types.ObjectId;
+  from: IUser;
+  to: IUser;
+  type: string;
+  actionThread: IThread | mongoose.Schema.Types.ObjectId;
+  createdAt: Date;
+}
+
+interface ActivityResponseItem extends IUser, IThread {}
+export type ActivityResponse = ActivityResponseItem[];
