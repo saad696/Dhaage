@@ -48,11 +48,6 @@ async function Page({ params }: { params: { id: string } }) {
                       height={24}
                     />
                     <p className="max-sm:hidden">{tab.label}</p>
-                    {tab.value === "dhaage" && (
-                      <p className="ml-1 rounded-sm bg-light-4 px-2 py-1 !text-tiny-medium text-light-2">
-                        {userInfo.threads.length}
-                      </p>
-                    )}
                   </TabsTrigger>
                 ))}
               </TabsList>
