@@ -88,7 +88,7 @@ export async function fetchPosts(
           posts = await populateHasLiked(posts, userId, true);
         }
       }
-      cache.set(cacheKeyPosts, { posts: posts, isNext: isNext });
+      // cache.set(cacheKeyPosts, { posts: posts, isNext: isNext });
       return { posts, isNext };
     // } else {
     //   return { posts: data?.posts as IThread[], isNext: data?.isNext };
