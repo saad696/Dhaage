@@ -39,7 +39,7 @@ export async function createThread({
       $push: { threads: createdThread._id },
     });
 
-    cache.delete(cacheKeyPosts);
+    // cache.delete(cacheKeyPosts);
     revalidatePath(path);
   } catch (error: any) {
     throw new Error(`Failed to create dhaaga: ${error.message}`);
@@ -53,9 +53,9 @@ export async function fetchPosts(
 ): Promise<{ posts: IThread[]; isNext: any } | null> {
   try {
     // Create a unique key for this set of parameters
-    let data = cache.get(cacheKeyPosts);
+    // let data = cache.get(cacheKeyPosts);
 
-    if (!data?.posts && !data?.isNext) {
+    // if (!data?.posts && !data?.isNext) {
       connectToDB();
       // Calculating the pages to skip
       const skipPostsCount = (pageNumber - 1) * pageSize;
@@ -90,9 +90,9 @@ export async function fetchPosts(
       }
       cache.set(cacheKeyPosts, { posts: posts, isNext: isNext });
       return { posts, isNext };
-    } else {
-      return { posts: data?.posts as IThread[], isNext: data?.isNext };
-    }
+    // } else {
+    //   return { posts: data?.posts as IThread[], isNext: data?.isNext };
+    // }
   } catch (error: any) {
     throw new Error(`Failed to fetch dhaage: ${error.message}`);
   }
@@ -146,7 +146,7 @@ export async function likeUnlikeThread(
     await user.save();
     await threadOwner.save();
 
-    cache.delete(cacheKeyPosts);
+    // cache.delete(cacheKeyPosts);
     revalidatePath(path);
   } catch (error: any) {
     throw new Error(`Process failed: ${error.message}`);
