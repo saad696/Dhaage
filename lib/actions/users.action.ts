@@ -42,7 +42,12 @@ export async function fetchUser(userId: string): Promise<IUser | null> {
   try {
     if (!userId) return null;
     connectToDB();
-    return (await User.findOne({ id: userId }).populate("threads")) as IUser;
+
+    const user = (await User.findOne({ id: userId }).populate({
+      path: "threads",
+      model: "Thread",
+    })) as IUser;
+    return user;
   } catch (error: any) {
     throw new Error(`Failed to fetch user: ${error.message}`);
   }
