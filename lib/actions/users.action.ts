@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import User from "../models/user.model";
 import { connectToDB } from "../mongoose";
-import { IThread, IUser, UpdateUserParams } from "../interface/interface";
-import { getJsPageSizeInKb } from "next/dist/build/utils";
+import { IUser, UpdateUserParams } from "../interface/interface";
 import { FilterQuery, SortOrder } from "mongoose";
+import Thread from "../models/thread.model";
 
 export async function updateUser({
   userId,
@@ -39,13 +39,13 @@ export async function updateUser({
 }
 
 export async function fetchUser(userId: string): Promise<IUser | null> {
+  connectToDB();
   try {
     if (!userId) return null;
-    connectToDB();
 
     const user = (await User.findOne({ id: userId }).populate({
       path: "threads",
-      model: "Thread",
+      model: Thread,
     })) as IUser;
     return user;
   } catch (error: any) {
@@ -60,13 +60,13 @@ export async function fetchUserPosts(userId: string): Promise<IUser> {
     let user = await User.findOne({ _id: userId })
       .populate({
         path: "threads",
-        model: "Thread",
+        model: Thread,
         populate: {
           path: "children",
-          model: "Thread",
+          model: Thread,
           populate: {
             path: "author",
-            model: "User",
+            model: User,
             select: "name image id", // Select the "name" and "_id" fields from the "User" model
           },
         },

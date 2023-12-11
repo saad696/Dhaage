@@ -28,7 +28,6 @@ export async function createThread({
 }: CreateThreadParams): Promise<void> {
   connectToDB();
   try {
-
     const createdThread = await Thread.create({
       text,
       author: new mongoose.Types.ObjectId(author),
@@ -65,12 +64,12 @@ export async function fetchPosts(
         .sort({ createdAt: "desc" })
         .skip(skipPostsCount)
         .limit(pageSize)
-        .populate({ path: "author", model: "User" })
+        .populate({ path: "author", model: User })
         .populate({
           path: "children",
           populate: {
             path: "author",
-            model: "User",
+            model: User,
             select: "_id name parentId image",
           },
         });
@@ -156,11 +155,11 @@ export async function likeUnlikeThread(
 
 export async function likedBy(threadId: string): Promise<any> {
   try {
-    connectToDB()
+    connectToDB();
     const likedByQuery = Thread.findById(threadId)
       .populate({
         path: "likes",
-        model: "User",
+        model: User,
         select: "username image",
       })
       .lean();
@@ -189,7 +188,7 @@ export async function fetchThreadById(
     let thread = await Thread.findById(id)
       .populate({
         path: "author",
-        model: "User",
+        model: User,
         select: "_id id name image",
       })
       .populate({
@@ -197,15 +196,15 @@ export async function fetchThreadById(
         populate: [
           {
             path: "author",
-            model: "User",
+            model: User,
             select: "_id id name parentId image",
           },
           {
             path: "children",
-            model: "Thread",
+            model: Thread,
             populate: {
               path: "author",
-              model: "User",
+              model: User,
               select: "_id id name parentId image",
             },
           },
@@ -322,7 +321,7 @@ async function populateHasLiked(
 //       author: { $ne: userId },
 //     }).populate({
 //       path: "author",
-//       model: "User",
+//       model: User,
 //       select: "name username image _id",
 //     })) as IThread[];
 
