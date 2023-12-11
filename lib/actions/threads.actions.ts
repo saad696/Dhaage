@@ -26,8 +26,8 @@ export async function createThread({
   communityId,
   path,
 }: CreateThreadParams): Promise<void> {
+  connectToDB();
   try {
-    connectToDB();
 
     const createdThread = await Thread.create({
       text,
@@ -156,6 +156,7 @@ export async function likeUnlikeThread(
 
 export async function likedBy(threadId: string): Promise<any> {
   try {
+    connectToDB()
     const likedByQuery = Thread.findById(threadId)
       .populate({
         path: "likes",
