@@ -8,6 +8,7 @@ import LeftBar from "@/components/shared/LeftBar";
 import RightBar from "@/components/shared/RightBar";
 import BottomBar from "@/components/shared/BottomBar";
 import { Toaster } from "@/components/ui/toaster";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,6 +34,7 @@ export default function RootLayout({
             <LeftBar />
 
             <section className="main-container">
+              <SpeedInsights />
               <div className="w-full max-w-4xl">{children}</div>
             </section>
 
