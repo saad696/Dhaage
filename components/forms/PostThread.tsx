@@ -18,6 +18,7 @@ import { updateUser } from "@/lib/actions/users.action";
 import { usePathname, useRouter } from "next/navigation";
 import { threadValidation } from "@/lib/validations/threads.validation";
 import { createThread } from "@/lib/actions/threads.actions";
+import { useOrganization } from "@clerk/nextjs";
 
 interface Props {
   userId: any;
@@ -26,6 +27,7 @@ interface Props {
 const PostThread: React.FC<Props> = ({ userId }) => {
   const router = useRouter();
   const pathname = usePathname();
+  const { organization } = useOrganization();
 
   const form = useForm<z.infer<typeof threadValidation>>({
     resolver: zodResolver(threadValidation),
@@ -39,7 +41,7 @@ const PostThread: React.FC<Props> = ({ userId }) => {
     await createThread({
       text: values.thread,
       author: userId,
-      communityId: null,
+      communityId: organization ? organization.id : null,
       path: pathname,
     });
 

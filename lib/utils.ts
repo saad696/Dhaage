@@ -13,7 +13,8 @@ export function isBase64Image(imageData: string) {
 }
 
 // created by chatgpt
-export function formatDateString(dateString: string) {
+export function formatDateString(dateString: string = '') {
+  if(!dateString) return
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "short",

@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  ActivityResponse,
   CreateThreadParams,
   IThread,
   IUser,
@@ -14,6 +13,7 @@ import mongoose from "mongoose";
 import { LRUCache } from "lru-cache";
 import { cacheKeyPosts, cacheOptions } from "@/constants";
 import Activity from "../models/activity.model";
+import Community from "../models/community.model";
 
 // Create a new cache
 const cache = new LRUCache<string, { posts: IThread[]; isNext: boolean }>(
@@ -28,16 +28,28 @@ export async function createThread({
 }: CreateThreadParams): Promise<void> {
   connectToDB();
   try {
+    const communityIdObject = await Community.findOne(
+      { id: communityId },
+      { _id: 1 }
+    );
+
     const createdThread = await Thread.create({
       text,
-      author: new mongoose.Types.ObjectId(author),
-      community: null,
+      author,
+      community: communityIdObject, // Assign communityId if provided, or leave it null for personal account
     });
 
-    // updating specific user
+    // Update User model
     await User.findByIdAndUpdate(author, {
       $push: { threads: createdThread._id },
     });
+
+    if (communityIdObject) {
+      // Update Community model
+      await Community.findByIdAndUpdate(communityIdObject, {
+        $push: { threads: createdThread._id },
+      });
+    }
 
     // cache.delete(cacheKeyPosts);
     revalidatePath(path);
@@ -56,40 +68,40 @@ export async function fetchPosts(
     // let data = cache.get(cacheKeyPosts);
 
     // if (!data?.posts && !data?.isNext) {
-      connectToDB();
-      // Calculating the pages to skip
-      const skipPostsCount = (pageNumber - 1) * pageSize;
+    connectToDB();
+    // Calculating the pages to skip
+    const skipPostsCount = (pageNumber - 1) * pageSize;
 
-      const threadsQuery = Thread.find({ parentId: { $in: [null, undefined] } })
-        .sort({ createdAt: "desc" })
-        .skip(skipPostsCount)
-        .limit(pageSize)
-        .populate({ path: "author", model: User })
-        .populate({
-          path: "children",
-          populate: {
-            path: "author",
-            model: User,
-            select: "_id name parentId image",
-          },
-        });
-
-      const totalPosts = await Thread.countDocuments({
-        parentId: { $in: [null, undefined] },
+    const threadsQuery = Thread.find({ parentId: { $in: [null, undefined] } })
+      .sort({ createdAt: "desc" })
+      .skip(skipPostsCount)
+      .limit(pageSize)
+      .populate({ path: "author", model: User })
+      .populate({
+        path: "children",
+        populate: {
+          path: "author",
+          model: User,
+          select: "_id name parentId image",
+        },
       });
 
-      let posts = (await threadsQuery.exec()) as IThread[];
-      const isNext = totalPosts > skipPostsCount + posts.length;
+    const totalPosts = await Thread.countDocuments({
+      parentId: { $in: [null, undefined] },
+    });
 
-      if (userId) {
-        // Fetch the user
-        const user = (await User.findOne({ id: userId })) as IUser;
-        if (user) {
-          posts = await populateHasLiked(posts, userId, true);
-        }
+    let posts = (await threadsQuery.exec()) as IThread[];
+    const isNext = totalPosts > skipPostsCount + posts.length;
+
+    if (userId) {
+      // Fetch the user
+      const user = (await User.findOne({ id: userId })) as IUser;
+      if (user) {
+        posts = await populateHasLiked(posts, userId, true);
       }
-      // cache.set(cacheKeyPosts, { posts: posts, isNext: isNext });
-      return { posts, isNext };
+    }
+    // cache.set(cacheKeyPosts, { posts: posts, isNext: isNext });
+    return { posts, isNext };
     // } else {
     //   return { posts: data?.posts as IThread[], isNext: data?.isNext };
     // }
