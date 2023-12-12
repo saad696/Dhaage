@@ -74,9 +74,8 @@ export async function fetchUserPosts(userId: string): Promise<IUser> {
       .exec();
 
     return user;
-  } catch (error) {
-    console.error("Error fetching user threads:", error);
-    throw error;
+  } catch (error: any) {
+    throw new Error("Error fetching user threads:", error);
   }
 }
 
@@ -88,7 +87,7 @@ export async function fetchUsers({
   sortBy = "desc",
 }: {
   userId: string;
-  searchString: string;
+  searchString: string | undefined;
   pageNumber: number;
   pageSize: number;
   sortBy: SortOrder;

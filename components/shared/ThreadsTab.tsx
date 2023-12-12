@@ -4,12 +4,14 @@ import ThreadCard from "../cards/ThreadCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { CornerUpRight, FileText } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
+import { fetchCommunityPosts } from "@/lib/actions/community.actions";
+import { IThread } from "@/lib/interface/interface";
 
 interface Props {
   currentUserId: string;
   accountId: string;
   accountType: string;
-  totalLikes: number;
+  totalLikes?: number;
 }
 
 const ThreadsTab: React.FC<Props> = async ({
@@ -18,32 +20,40 @@ const ThreadsTab: React.FC<Props> = async ({
   accountType,
   totalLikes = 0,
 }) => {
-  let data = await fetchUserPosts(accountId);
+  let data: any;
+
+  if (accountType === "Community") {
+    data = await fetchCommunityPosts(accountId);
+  } else {
+    data = await fetchUserPosts(accountId);
+  }
 
   const primaryThreads = data.threads.filter(
-    (thread) => thread.isComment !== true
+    (thread: IThread) => thread.isComment !== true
   );
 
   const commentThreads = data.threads.filter(
-    (thread) => thread.isComment === true
+    (thread: IThread) => thread.isComment === true
   );
 
   return (
     <>
       <section className="mt-9 flex flex-col gap-10">
-        <div>
-          <p className="text-base-medium md:text-heading4-medium text-light-2 flex items-center gap-1">
-            Overall Likes on Dhaage:
-            <span>{totalLikes}</span>
-            {/* <Image
+        {accountType !== "Community" && (
+          <div>
+            <p className="text-base-medium md:text-heading4-medium text-light-2 flex items-center gap-1">
+              Overall Likes on Dhaage:
+              <span>{totalLikes}</span>
+              {/* <Image
               src={`/assets/heart-red.svg`}
               alt="heart"
               width={640} // base value
               height={480} // base value
               className="h-[18px] w-[18px] md:h-[36px] md:w-[36px] object-contain"
             /> */}
-          </p>
-        </div>
+            </p>
+          </div>
+        )}
         <Tabs defaultValue="primary" className="w-full">
           <TabsList className="tab">
             <TabsTrigger key={"primary"} value={"primary"} className="tab">

@@ -19,7 +19,7 @@ export interface CreateThreadParams {
 // Define an interface for the User document
 export interface IUser {
   id: string;
-  _id: mongoose.Schema.Types.ObjectId;
+  _id: any;
   username: string;
   name: string;
   image: string;
@@ -29,10 +29,11 @@ export interface IUser {
   likes: mongoose.Schema.Types.ObjectId[];
   onboarded: boolean;
   communities: mongoose.Schema.Types.ObjectId[];
+  type?: "User" | "Community";
 }
 
 export interface IThread {
-  _id: mongoose.Schema.Types.ObjectId;
+  _id: any;
   text: string;
   author: IUser;
   community?: mongoose.Schema.Types.ObjectId;

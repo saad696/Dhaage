@@ -1,11 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import {
-  CreateThreadParams,
-  IThread,
-  IUser,
-} from "../interface/interface";
+import { CreateThreadParams, IThread, IUser } from "../interface/interface";
 import Thread from "../models/thread.model";
 import User from "../models/user.model";
 import { connectToDB } from "../mongoose";
@@ -77,6 +73,10 @@ export async function fetchPosts(
       .skip(skipPostsCount)
       .limit(pageSize)
       .populate({ path: "author", model: User })
+      .populate({
+        path: "community",
+        model: Community,
+      })
       .populate({
         path: "children",
         populate: {
@@ -201,6 +201,11 @@ export async function fetchThreadById(
       .populate({
         path: "author",
         model: User,
+        select: "_id id name image",
+      })
+      .populate({
+        path: "community",
+        model: Community,
         select: "_id id name image",
       })
       .populate({
