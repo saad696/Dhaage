@@ -12,7 +12,7 @@ const BottomBar = () => {
 
   return (
     <section className="bottombar">
-      <div className="bottombar_conatiner flex">
+      <div className="bottombar_container flex">
         {sidebarLinks.map((link) => {
           const isActive =
             (pathname.includes(link.route) && link.route.length > 1) ||
