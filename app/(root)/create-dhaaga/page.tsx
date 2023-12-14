@@ -10,6 +10,8 @@ async function Page() {
 
   const userInfo = await fetchUser(user.id);
 
+  if (!userInfo) redirect("/");
+
   if (userInfo && !userInfo.onboarded) {
     redirect("/onboarding");
   }
@@ -17,9 +19,7 @@ async function Page() {
   return (
     <>
       <h1 className="head-text">Create Dhaaga</h1>
-      {
-        userInfo && <PostThread userId={userInfo._id.toString()} />
-      }
+      {userInfo && <PostThread userId={userInfo._id.toString()} />}
     </>
   );
 }
